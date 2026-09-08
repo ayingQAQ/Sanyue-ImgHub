@@ -713,7 +713,8 @@ computed: {
     },
     rootUrl() {
         // 链接前缀，优先级：用户自定义 > urlPrefix > 默认
-        return this.useCustomUrl === 'true' ? this.customUrlPrefix : this.userConfig?.urlPrefix || `${document.location.origin}/file/`
+        const fallback = this.userConfig?.urlPrefix || `${document.location.origin}/file/`
+        return this.useCustomUrl === 'true' && this.customUrlPrefix?.trim() ? this.customUrlPrefix.trim() : fallback
     },
     isSelectAll: {
         get() {
