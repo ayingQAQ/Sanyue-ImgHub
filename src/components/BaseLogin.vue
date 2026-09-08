@@ -2,7 +2,6 @@
     <div class="login" :style="viewportStyle">
         <ToggleDark class="toggle-dark"/>
         <LanguageSwitcher class="language-switcher"/>
-        <Logo />
         <div class="login-container">
             <h1 class="login-title" tabindex="0">{{ title }}</h1>
             
@@ -52,7 +51,6 @@
 import Footer from '@/components/Footer.vue';
 import ToggleDark from '@/components/ToggleDark.vue';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
-import Logo from '@/components/Logo.vue';
 import { mapGetters } from 'vuex';
 import backgroundManager from '@/mixins/backgroundManager';
 
@@ -130,8 +128,7 @@ export default {
     components: {
         Footer,
         ToggleDark,
-        LanguageSwitcher,
-        Logo
+        LanguageSwitcher
     },
     mounted() {
         // 初始化表单数据

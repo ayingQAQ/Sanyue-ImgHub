@@ -1,15 +1,11 @@
 <template>
-    <a 
-        :href="logoHref" 
-        :target="target"
-        :class="logo-link"
-    >
+    <div class="logo-wrapper">
     <img 
         :class="logoClasses"
         :alt="alt" 
         :src="logoUrl"
     />
-  </a>
+  </div>
 </template>
 
 <script>
@@ -18,21 +14,10 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'Logo',
   props: {
-    // Logo链接地址（可被用户配置覆盖）
-    href: {
-      type: String,
-      default: 'https://github.com/MarSeventh/CloudFlare-ImgBed'
-    },
-    // 链接打开方式
-    target: {
-      type: String,
-      default: '_blank', // _blank, _self, _parent, _top
-      validator: value => ['_blank', '_self', '_parent', '_top'].includes(value)
-    },
     // 图片alt文本
     alt: {
       type: String,
-      default: 'Sanyue logo'
+      default: 'Wenying logo'
     },
     // 自定义logo图片URL（可选）
     customSrc: {
@@ -55,11 +40,6 @@ export default {
     enableHover: {
       type: Boolean,
       default: true
-    },
-    // 是否允许使用用户配置的链接（仅上传页面启用）
-    useConfigLink: {
-      type: Boolean,
-      default: false
     }
   },
   computed: {
@@ -69,13 +49,6 @@ export default {
       return this.customSrc || 
              this.userConfig?.logoUrl || 
              require('../assets/logo.png')
-    },
-    logoHref() {
-      // 只有启用 useConfigLink 时才使用用户配置的链接
-      if (this.useConfigLink && this.userConfig?.logoLink) {
-        return this.userConfig.logoLink
-      }
-      return this.href
     },
     logoClasses() {
       return {
@@ -90,8 +63,7 @@ export default {
 </script>
 
 <style scoped>
-.logo-link {
-  text-decoration: none;
+.logo-wrapper {
   display: inline-block;
 }
 

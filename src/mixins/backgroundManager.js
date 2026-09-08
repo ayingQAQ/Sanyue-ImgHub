@@ -194,6 +194,10 @@ export default {
      * @param {boolean} autoCreateElements - 是否自动创建背景元素
      */
     initializeBackground(configKey, containerSelector = '.login', useDefaultBackground = false, autoCreateElements = false) {
+      // Wenying 定制版不使用任何壁纸背景。
+      this.clearBackgroundImages(true);
+      return;
+
       // 如果全局壁纸开关关闭，直接清理背景并返回
       if (this.userConfig?.wallpaperEnabled === false) {
         this.clearBackgroundImages(true);

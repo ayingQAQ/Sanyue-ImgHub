@@ -16,6 +16,7 @@ import i18n, { initializeLocale } from './locales'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import './styles/global.css'
+import './styles/interface.css'
 
 // OverlayScrollbars 悬浮滚动条
 import 'overlayscrollbars/overlayscrollbars.css'
@@ -70,7 +71,7 @@ const applyDarkModeClass = (isDarkMode) => {
 
 // 预设网站标题的函数
 const presetSiteTitle = (userConfig) => {
-    document.title = userConfig?.siteTitle || 'Sanyue ImgHub';
+    document.title = userConfig?.siteTitle || 'Wenying ImgHub';
 };
 
 // 预设和更新网站图标的函数

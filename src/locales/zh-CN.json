@@ -46,6 +46,7 @@
   }
 ,
   "uploadForm": {
+    "telegramBackup": {"pending":"Telegram 备份中","retrying":"Telegram 备份重试中","ready":"Telegram 已备份","cancelled":"Telegram 备份已取消","deferred":"Telegram 备份待续传"},
     "deleted": "{name}已删除",
     "uploadSuccess": "{name}上传成功",
     "uploadFailed": "{name}上传失败",

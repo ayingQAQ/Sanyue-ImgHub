@@ -214,7 +214,7 @@ export default {
     },
     props: {
         modelValue: { type: Boolean, default: false },
-        uploadChannel: { type: String, default: 'telegram' },
+        uploadChannel: { type: String, default: 'cfr2' },
         channelName: { type: String, default: '' },
         availableChannels: { type: Object, default: () => ({}) },
         currentChannelList: { type: Array, default: () => [] },

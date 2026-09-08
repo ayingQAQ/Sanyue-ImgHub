@@ -119,13 +119,13 @@
                         <div class="upload-list-dashboard-action">
                             <div class="modern-action-group">
                                 <el-tooltip :disabled="disableTooltip" :content="$t('upload.copyAll')" placement="top" :show-after="1000">
-                                    <button class="modern-action-btn modern-action-btn-copy" @click="copyAll">
+                                    <button class="modern-action-btn modern-action-btn-copy" :aria-label="$t('upload.copyAll')" @click="copyAll">
                                         <font-awesome-icon icon="copy" />
                                     </button>
                                 </el-tooltip>
                                 <el-tooltip :disabled="disableTooltip" :content="$t('upload.retryFailed')" placement="top" :show-after="1000">
                                     <el-dropdown>
-                                        <button class="modern-action-btn modern-action-btn-retry" @click="retryError">
+                                        <button class="modern-action-btn modern-action-btn-retry" :aria-label="$t('upload.retryFailed')" @click="retryError">
                                             <font-awesome-icon icon="redo" />
                                         </button>
                                         <template #dropdown>
@@ -142,7 +142,7 @@
                                 </el-tooltip>
                                 <el-tooltip :disabled="disableTooltip" :content="$t('upload.clearList')" placement="top" :show-after="1000">
                                     <el-dropdown>
-                                        <button class="modern-action-btn modern-action-btn-danger">
+                                        <button class="modern-action-btn modern-action-btn-danger" :aria-label="$t('upload.clearList')">
                                             <font-awesome-icon icon="trash-alt" />
                                         </button>
                                         <template #dropdown>
@@ -172,6 +172,7 @@
 
 <script>
 import axios from '@/utils/axios'
+import { resumeTelegramBackup } from '@/utils/upload/telegramBackup'
 import * as imageConversion from 'image-conversion'
 import { mapGetters } from 'vuex'
 import { buildFileUrls, updateFileListUrls, getUrlByFormat } from '@/utils/upload/urlBuilder'
@@ -217,7 +218,7 @@ props: {
     },
     uploadChannel: {
         type: String,
-        default: 'telegram',
+        default: 'cfr2',
         required: false
     },
     channelName: {
@@ -287,6 +288,7 @@ data() {
         activeUploads: 0, // 当前正在上传的文件数
         maxConcurrentUploads: 6, // 最大并发上传数
         // 取消上传控制
+        backupControllers: new Map(),
         abortControllers: new Map(), // 存储每个文件的 AbortController
         pasteFocusTarget: null,
     }
@@ -371,6 +373,8 @@ mounted() {
     this.autoReUpload = this.storeAutoReUpload
 },
 beforeUnmount() {
+    for (const controller of this.backupControllers.values()) controller.abort()
+    this.backupControllers.clear()
     document.removeEventListener('paste', this.handlePaste)
     document.removeEventListener('keydown', this.handlePasteShortcut)
     // 清理状态
@@ -656,9 +660,11 @@ methods: {
             }
         }
 
+        let tieringFallback = false
         try {
             // 第一步：初始化分块上传，获取uploadId
             const initFormData = new FormData()
+            initFormData.append('originalFileSize', String(fileSize))
             initFormData.append('originalFileName', file.file.name)
             initFormData.append('originalFileType', fileType)
             initFormData.append('totalChunks', totalChunks.toString())
@@ -674,6 +680,7 @@ methods: {
                     '&initChunked=true',
                 method: 'post',
                 data: initFormData,
+                signal: abortController.signal,
                 withAuthCode: true
             })
 
@@ -836,6 +843,14 @@ methods: {
                 return
             }
             
+            if (err.response?.status === 409 && err.response.data?.error === 'hf_direct_upload_required' && !abortController.signal.aborted) {
+                const fallbackItem = this.fileList.find(item => item.uid === file.file.uid)
+                if (!fallbackItem) return
+                fallbackItem.uploadChannel = 'huggingface'
+                fallbackItem.tieredToHuggingFace = true
+                tieringFallback = true
+                return await this.uploadToHuggingFaceDirect(file)
+            }
             console.error('分块上传失败:', err)
             
             // 如果有uploadId，清理相关资源
@@ -862,10 +877,12 @@ methods: {
             // 清理 AbortController
             this.abortControllers.delete(file.file.uid)
             // 调用并发控制的完成回调
-            this.onUploadComplete()
+            if (!tieringFallback) this.onUploadComplete()
         }
     },
     handleRemove(file) {
+        this.backupControllers.get(file.uid)?.abort()
+        this.backupControllers.delete(file.uid)
         // 如果文件正在上传，取消上传
         if (this.abortControllers.has(file.uid)) {
             this.abortControllers.get(file.uid).abort()
@@ -895,6 +912,18 @@ methods: {
             console.warn('清理上传资源失败:', error)
         }
     },
+    async continueBackup(fileItem) {
+        this.backupControllers.get(fileItem.uid)?.abort()
+        const controller = new AbortController()
+        this.backupControllers.set(fileItem.uid, controller)
+        try {
+            await resumeTelegramBackup(axios, fileItem.srcID, controller.signal, state => {
+                fileItem.backupStatus = state.status
+            })
+        } finally {
+            if (this.backupControllers.get(fileItem.uid) === controller) this.backupControllers.delete(fileItem.uid)
+        }
+    },
     handleSuccess(response, file) {
         const fileItem = this.fileList.find(item => item.uid === file.uid)
         if (!fileItem) return // 文件已被删除
@@ -915,6 +944,7 @@ methods: {
             
             // Save to history
             this.saveToHistory(fileItem)
+            if (['cfr2', 'auto', 'huggingface'].includes(uploadChannel)) void this.continueBackup(fileItem)
 
             this.$message({
                 type: 'success',
@@ -1424,7 +1454,7 @@ methods: {
                     fileType: file.file.type,
                     sha256,
                     fileSample,
-                    channelName: this.channelName, // 传递指定的渠道名称
+                    channelName: fileItem.tieredToHuggingFace ? '' : this.channelName, // 自动切换时由服务端选择 HF 渠道
                     uploadNameType: this.uploadNameType,
                     uploadFolder: targetUploadFolder
                 },
@@ -2600,4 +2630,22 @@ html.dark .el-upload__text :deep(em) {
     }
 }
 
+</style>
+<style scoped>
+.upload-form { --upload-card-height: 320px; --upload-card-busy-height: 136px; --upload-list-height: 64px; --upload-list-gap: 16px; --upload-list-radius: 12px; width: 100%; }
+.upload-card-wrapper, .upload-card, .upload-list-card { width: 100%; max-width: 100%; box-sizing: border-box; }
+.upload-card :deep(.el-upload) { width: 100%; }
+.upload-card :deep(.el-upload-dragger) { width: 100%; border: 1px dashed var(--ui-border); border-radius: 12px; background: var(--ui-surface); transition: border-color 150ms ease, background-color 150ms ease; }
+.upload-card :deep(.el-upload-dragger:hover), .upload-card :deep(.el-upload-dragger.is-dragover) { border-color: var(--ui-focus); background: color-mix(in srgb, var(--ui-focus) 4%, var(--ui-surface)); }
+.upload-card-glow, .upload-card :deep(.el-upload-dragger::before), .upload-card :deep(.el-upload-dragger::after) { display: none; }
+.upload-list-card { border: 1px solid var(--ui-border); background: var(--ui-surface); box-shadow: none; }
+.upload-list-dashboard-title { font-variant-numeric: tabular-nums; }
+.modern-action-group { gap: 8px; }
+.modern-action-btn, .folder-upload-icon-button, .folder-upload-icon-button.upload-list-busy { min-width: 44px; min-height: 44px; border-radius: 6px; }
+.paste-card-actions { width: 100%; box-sizing: border-box; }
+@media (max-width: 768px) {
+    .upload-form { --upload-card-height: 260px; --upload-card-busy-height: 128px; }
+    .upload-prompt-row { flex-wrap: wrap; }
+    .upload-list-dashboard { height: auto; min-height: 64px; flex-wrap: wrap; gap: 8px; }
+}
 </style>

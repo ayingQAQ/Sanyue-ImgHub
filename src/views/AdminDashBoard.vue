@@ -1,10 +1,11 @@
 <template>
-    <div class="container">
+    <div class="container dashboard-shell" :class="{ 'toolbar-expanded': toolbarExpanded }">
         <el-container>
             <el-header>
             <div class="header-content admin-header-content">
                 <DashboardTabs activeTab="dashboard"></DashboardTabs>
-                <div class="search-area">
+                <button class="toolbar-toggle" type="button" :aria-expanded="toolbarExpanded" aria-controls="dashboard-search" @click="toolbarExpanded = !toolbarExpanded">{{ toolbarExpanded ? '收起' : '搜索 / 操作' }}</button>
+                <div class="search-area" id="dashboard-search">
                     <div class="search-card">
                         <el-input v-model="tempSearch" size="small" :placeholder="$t('dashboard.searchPlaceholder')" @keyup.enter="handleSearch">
                             <template #suffix>
@@ -125,7 +126,7 @@
                 <SkeletonLoader v-if="loading" type="card" :count="pageSize" />
                 <!-- 空状态 -->
                 <div v-else-if="paginatedTableData.length === 0" class="empty-state">
-                    <font-awesome-icon icon="folder-open" class="empty-icon" />
+                    <InterfaceIcon name="folder" class="empty-icon" />
                     <p class="empty-text">{{ hasSearchOrFilter ? $t('dashboard.noMatchingFiles') : $t('dashboard.currentDirEmpty') }}</p>
                     <p class="empty-hint">{{ hasSearchOrFilter ? $t('dashboard.adjustSearchHint') : $t('dashboard.uploadHint') }}</p>
                 </div>
@@ -198,7 +199,7 @@
                 <SkeletonLoader v-if="loading" type="list" :count="pageSize" />
                 <!-- 空状态 -->
                 <div v-else-if="paginatedTableData.length === 0" class="empty-state list-empty">
-                    <font-awesome-icon icon="folder-open" class="empty-icon" />
+                    <InterfaceIcon name="folder" class="empty-icon" />
                     <p class="empty-text">{{ hasSearchOrFilter ? $t('dashboard.noMatchingFiles') : $t('dashboard.currentDirEmpty') }}</p>
                     <p class="empty-hint">{{ hasSearchOrFilter ? $t('dashboard.adjustSearchHint') : $t('dashboard.uploadHint') }}</p>
                 </div>
@@ -417,6 +418,7 @@ import { fileManager } from '@/utils/fileManager';
 import fetchWithAuth from '@/utils/fetchWithAuth';
 import { validateFolderPath } from '@/utils/pathValidator';
 import backgroundManager from '@/mixins/backgroundManager';
+import InterfaceIcon from '@/components/InterfaceIcon.vue';
 import { ref } from 'vue';
 import { useDragSelect } from '@/utils/dashboard/useDragSelect.js';
 
@@ -425,6 +427,7 @@ name: 'AdminDashBoard',
 mixins: [backgroundManager],
 data() {
     return {
+        toolbarExpanded: false,
         Number: 0,
         directFileCount: 0, // 当前目录直接子文件数量
         directFolderCount: 0, // 当前目录直接子文件夹数量
@@ -484,6 +487,7 @@ data() {
     }
 },
 components: {
+    InterfaceIcon,
     DashboardTabs,
     TagManagementDialog,
     BatchTagDialog,

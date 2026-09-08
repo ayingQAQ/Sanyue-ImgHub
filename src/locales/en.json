@@ -45,6 +45,7 @@
     "clearUploaded": "Clear Uploaded"
   },
   "uploadForm": {
+    "telegramBackup": {"pending":"Telegram backup pending","retrying":"Retrying Telegram backup","ready":"Backed up to Telegram","cancelled":"Telegram backup cancelled","deferred":"Telegram backup awaiting retry"},
     "deleted": "{name} deleted",
     "uploadSuccess": "{name} uploaded successfully",
     "uploadFailed": "{name} upload failed",

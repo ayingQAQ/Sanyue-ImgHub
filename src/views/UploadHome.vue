@@ -4,8 +4,8 @@
         <!-- 桌面端按钮 -->
         <ToggleDark class="toggle-dark-button desktop-only"/>
         <el-dropdown class="more-dropdown desktop-only" trigger="click" @command="handleDesktopMenuCommand">
-            <el-button class="more-button">
-                <font-awesome-icon icon="ellipsis-v" size="lg"/>
+            <el-button class="more-button" :aria-label="$i18n.locale === 'zh-CN' ? '更多操作' : 'More actions'">
+                <InterfaceIcon name="more" />
             </el-button>
             <template #dropdown>
                 <el-dropdown-menu>
@@ -55,8 +55,8 @@
                 @select="handleDirectorySelect"
             >
                 <template #trigger>
-                    <el-button class="directory-tree-trigger">
-                        <font-awesome-icon icon="folder-tree" />
+                    <el-button class="directory-tree-trigger" :aria-label="$t('upload.folderPlaceholder')">
+                        <InterfaceIcon name="tree" />
                     </el-button>
                 </template>
             </DirectoryTreePicker>
@@ -141,12 +141,12 @@
                 <font-awesome-icon icon="chevron-down" class="quick-toolbar-icon quick-toolbar-toggle-icon"/>
             </el-button>
         </div>
-        <Logo :useConfigLink="true" />
         <div class="header">
             <h1 class="title">
                 <span class="title-crayon-text" aria-hidden="true">{{ ownerName }} ImgHub</span>
-                <a class="main-title" href="https://github.com/MarSeventh/CloudFlare-ImgBed" target="_blank">{{ ownerName }}</a> ImgHub
+                <span class="main-title">{{ ownerName }}</span> ImgHub
             </h1>
+            <p class="workspace-description">{{ $i18n.locale === 'zh-CN' ? '上传、整理、分享，让文件井井有条。' : 'Upload, organize and share. Everything in its place.' }}</p>
         </div>
         <UploadForm 
             :selectedUrlForm="selectedUrlForm" 
@@ -247,9 +247,9 @@
 
 <script>
 import UploadForm from '@/components/upload/UploadForm.vue'
+import InterfaceIcon from '@/components/InterfaceIcon.vue'
 import Footer from '@/components/Footer.vue'
 import ToggleDark from '@/components/ToggleDark.vue'
-import Logo from '@/components/Logo.vue'
 import { setLocale } from '@/locales'
 import UploadHistory from '@/components/upload/UploadHistory.vue'
 import UploadSettingsDialog from '@/components/upload/UploadSettingsDialog.vue'
@@ -367,7 +367,7 @@ export default {
     computed: {
         ...mapGetters(['userConfig', 'uploadCopyUrlForm', 'compressConfig', 'storeUploadChannel', 'storeChannelName', 'storeUploadNameType', 'customUrlSettings', 'storeAutoRetry', 'storeUploadMethod', 'storeUploadFolder']),
         ownerName() {
-            return this.userConfig?.ownerName || 'Sanyue'
+            return this.userConfig?.ownerName || 'Wenying'
         },
         dialogWidth() {
             return window.innerWidth > 768 ? '50%' : '90%'
@@ -404,7 +404,7 @@ export default {
         this.serverCompress = this.compressConfig.serverCompress ?? true
         this.convertToWebp = this.compressConfig.convertToWebp ?? this.parseBoolean(this.userConfig?.defaultConvertToWebp, false)
         // 读取用户选择的上传渠道
-        this.uploadChannel = this.storeUploadChannel || this.userConfig?.defaultUploadChannel || 'telegram'
+        this.uploadChannel = this.storeUploadChannel || this.userConfig?.defaultUploadChannel || 'cfr2'
         // 用户定义的失败自动切换
         this.autoRetry = this.storeAutoRetry
         // 读取用户选择的上传文件命名方式
@@ -434,10 +434,10 @@ export default {
         this.showAnnouncementIfNeeded()
     },
     components: {
+        InterfaceIcon,
         UploadForm,
         Footer,
         ToggleDark,
-        Logo,
         UploadHistory,
         UploadSettingsDialog,
         DirectoryTreePicker,
@@ -1349,5 +1349,21 @@ html.dark .upload-folder:hover :deep(.el-input__wrapper) {
 
 .footer {
     height: 6vh;
+}
+</style>
+<style scoped>
+.upload-home { min-height: calc(100svh - 76px); padding: 100px 20px 32px; box-sizing: border-box; }
+.header { flex-direction: column; gap: 12px; margin: 0 0 28px; padding: 0; top: auto; }
+.header .title { margin: 0; font-size: clamp(28px, 4vw, 48px); line-height: 1.5; letter-spacing: 1px; cursor: default; animation: none; }
+.header .title:hover { transform: none; filter: none; color: var(--upload-title-text-color); }
+.header .title:hover .main-title { opacity: 1; }
+.header .title-crayon-text, .header .title::after { display: none; }
+.workspace-description { margin: 0; font-size: 14px; color: var(--ui-muted); line-height: 1.7; }
+.upload { top: auto; width: min(800px, 100%); }
+.footer { height: auto; min-height: 76px; }
+@media (max-width: 768px) {
+    .upload-home { padding: 112px 16px 80px; }
+    .header { margin-bottom: 24px; }
+    .quick-toolbar { --quick-toolbar-size: 52px; --quick-toolbar-button-size: 44px; }
 }
 </style>

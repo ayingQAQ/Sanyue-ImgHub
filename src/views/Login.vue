@@ -25,7 +25,7 @@ export default {
     computed: {
         ...mapGetters(['userConfig']),
         ownerName() {
-            return this.userConfig?.ownerName || 'Sanyue'
+            return this.userConfig?.ownerName || 'Wenying'
         },
         loginTitle() {
             return this.$t('login.title', { owner: this.ownerName })

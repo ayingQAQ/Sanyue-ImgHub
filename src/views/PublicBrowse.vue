@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <header class="header">
       <div class="header-left">
-        <a class="logo" href="https://github.com/MarSeventh/CloudFlare-ImgBed" target="_blank" rel="noopener">{{ siteName }}</a>
+        <span class="logo">{{ siteName }}</span>
       </div>
       <div class="header-center">
         <div class="breadcrumb">
@@ -377,7 +377,7 @@ export default {
   computed: {
     ...mapGetters(['userConfig']),
     siteName() {
-      return this.userConfig?.siteTitle || 'Sanyue ImgHub';
+      return this.userConfig?.siteTitle || 'Wenying ImgHub';
     },
     rootDirName() {
       return this.rootDir.split('/').filter(Boolean).pop() || this.$t('publicBrowse.rootDirectory');
